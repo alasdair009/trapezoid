@@ -8,13 +8,24 @@ class TrapezoidCanvas {
     angle = 20;
     tanAngle = Math.tan(this.angle * Math.PI/180);
     extraWidth: number;
+    backgroundLeft = new Image();
+    backgroundRight = new Image();
 
     constructor() {
-        // If the screen proportions change we need to redraw the content
-        window.addEventListener("resize", this.redrawCanvas);
+        this.backgroundLeft.src = "assets/img/landscape1.jpeg";
+        this.backgroundRight.src = "assets/img/landscape2.jpeg";
 
         this.setupCanvas();
-        this.drawCanvas();
+
+        this.backgroundLeft.onload = () => {
+            this.drawTrapezoid(Sides.Left);
+        }
+
+        this.backgroundRight.onload = () => {
+            this.drawTrapezoid(Sides.Right);
+        }
+
+        window.addEventListener("resize", this.redrawCanvas);
     }
 
     /**
@@ -60,34 +71,40 @@ class TrapezoidCanvas {
         return tempCanvas;
     }
 
+    /**
+     * Draw the trapezoid for the given side
+     * @param side
+     */
     drawTrapezoid = (side: Sides) => {
+        // Setup the canvas context ready for draw
         const context = this.canvas.getContext("2d");
+
+        // Define the coordinates for the trapezoid
         const topMiddle = (this.canvas.width / 2) + this.extraWidth;
         const bottomMiddle = (this.canvas.width / 2) - this.extraWidth;
         const xCoordinates = (side == Sides.Left)? [0, topMiddle, bottomMiddle, 0] : [topMiddle, this.canvas.width, this.canvas.width, bottomMiddle];
         const yCoordinates = [0, 0, this.canvas.height, this.canvas.height];
-        const background = new Image();
-        background.src = (side == Sides.Left)? "assets/img/landscape1.jpeg" : "assets/img/landscape2.jpeg";
 
-        background.onload = () => {
-            // Once we have the background create a temporary canvas to scale it to the right size
-            const tempCanvas = this.generateBackgroundCanvasPattern(background, side);
+        // Get the background image
+        const background = (side == Sides.Left)? this.backgroundLeft : this.backgroundRight;
 
-            context.fillStyle = context.createPattern(tempCanvas, "no-repeat");
-            context.beginPath();
-            xCoordinates.forEach((xCoordinate, index) => {
-                if (index > 0) {
-                    context.lineTo(xCoordinate, yCoordinates[index]);
-                } else {
-                    context.moveTo(xCoordinate, yCoordinates[index]);
-                }
+        // Create a temporary canvas to scale it to the right size
+        const tempCanvas = this.generateBackgroundCanvasPattern(background, side);
 
-            });
-            context.closePath();
-            context.stroke();
-            //context.fillStyle=(side == Sides.Left)? "red" : "blue";
-            context.fill();
-        }
+        context.fillStyle = context.createPattern(tempCanvas, "no-repeat");
+        context.beginPath();
+        xCoordinates.forEach((xCoordinate, index) => {
+            if (index > 0) {
+                context.lineTo(xCoordinate, yCoordinates[index]);
+            } else {
+                context.moveTo(xCoordinate, yCoordinates[index]);
+            }
+
+        });
+        context.closePath();
+        context.stroke();
+        //context.fillStyle=(side == Sides.Left)? "red" : "blue";
+        context.fill();
     }
 }
 
