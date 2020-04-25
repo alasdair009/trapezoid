@@ -3,6 +3,9 @@ enum Sides {
     Right
 }
 
+/**
+ * A basic class for initialising two trapezoids tessellating with each other
+ */
 class TrapezoidCanvas {
     canvas = document.getElementById("trapezoid-canvas") as HTMLCanvasElement;
     offsetX = this.canvas.getBoundingClientRect().left;
@@ -42,17 +45,27 @@ class TrapezoidCanvas {
         this.extraWidth = (this.tanAngle * this.canvas.height) / 2;
     }
 
+    /**
+     * Redraw the canvas to ensure the new dimensions work correctly
+     */
     redrawCanvas = () => {
         this.canvas.getContext("2d").clearRect(0,0,this.canvas.width, this.canvas.height);
         this.setupCanvas();
         this.drawCanvas();
+        this.runCanvas();
     }
 
+    /**
+     * First draw of the canvas
+     */
     drawCanvas = () => {
         this.drawTrapezoid(Sides.Left);
         this.drawTrapezoid(Sides.Right);
     }
 
+    /**
+     * Handle all events after the draw
+     */
     runCanvas = () => {
         this.canvas.addEventListener("mousemove", (event) => {
 
