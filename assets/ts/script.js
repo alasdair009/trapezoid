@@ -44,6 +44,31 @@ var TrapezoidCanvas = /** @class */ (function () {
             // Make sure the image will at least cover the side it is on
             var displayWidth = (background.width > tempCanvasDisplayWidth) ? background.width : tempCanvasDisplayWidth;
             var displayHeight = (background.height > _this.canvas.height) ? background.height : _this.canvas.height;
+            // If both dimensions of the asset are bigger we need to proportionally shrink it down
+            var widthDifference = displayWidth - tempCanvasDisplayWidth;
+            var heightDifference = displayHeight - _this.canvas.height;
+            if (widthDifference > 0 && heightDifference > 0) {
+                console.log("Asset width is " + displayWidth + " which is " + widthDifference + " wider");
+                console.log("Asset height is " + displayHeight + " is " + heightDifference + " taller");
+                var ratioToResize = 1;
+                // Figure out in which dimension the asset is larger
+                // If the width is larger scale by the height
+                // If the height is larger scale by the width
+                if (widthDifference > heightDifference) {
+                    console.log("resize by height");
+                    ratioToResize = 1 - (heightDifference / displayHeight);
+                }
+                else {
+                    console.log("resize by width");
+                    ratioToResize = 1 - (widthDifference / displayWidth);
+                }
+                console.log("Ratio: " + ratioToResize);
+                // Resize the asset
+                displayWidth *= ratioToResize;
+                displayHeight *= ratioToResize;
+                console.log("New width is " + displayWidth);
+                console.log("New height is " + displayHeight);
+            }
             // Set where on the canvas it needs to be drawn from (ie left or from the start of the right side)
             var displayXOffset = -((displayWidth - tempCanvasDisplayWidth) / 2);
             var tempCanvasDisplayX = (side == Sides.Left) ? displayXOffset : _this.canvas.width - tempCanvasDisplayWidth + displayXOffset;

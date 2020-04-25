@@ -64,8 +64,29 @@ class TrapezoidCanvas {
         const tempCanvasDisplayWidth = (this.canvas.width / 2) + this.extraWidth;
 
         // Make sure the image will at least cover the side it is on
-        const displayWidth = (background.width > tempCanvasDisplayWidth)? background.width : tempCanvasDisplayWidth;
-        const displayHeight = (background.height > this.canvas.height)? background.height : this.canvas.height;
+        let displayWidth = (background.width > tempCanvasDisplayWidth)? background.width : tempCanvasDisplayWidth;
+        let displayHeight = (background.height > this.canvas.height)? background.height : this.canvas.height;
+
+        // If both dimensions of the asset are bigger we need to proportionally shrink it down
+        const widthDifference = displayWidth - tempCanvasDisplayWidth;
+        const heightDifference = displayHeight - this.canvas.height;
+
+        if (widthDifference > 0 && heightDifference > 0) {
+            let ratioToResize = 1;
+            // Figure out in which dimension the asset is larger
+            // If the width is larger scale by the height
+            // If the height is larger scale by the width
+            // So calculate the percentage amount we need to remove from the dimension and convert that to a ratio
+            if (widthDifference > heightDifference) {
+                ratioToResize = 1 - (heightDifference / displayHeight);
+            } else {
+                ratioToResize = 1 - (widthDifference / displayWidth);
+            }
+
+            // Resize the asset
+            displayWidth*= ratioToResize;
+            displayHeight*= ratioToResize;
+        }
 
         // Set where on the canvas it needs to be drawn from (ie left or from the start of the right side)
         const displayXOffset = -((displayWidth - tempCanvasDisplayWidth) / 2)
