@@ -41,13 +41,16 @@ var TrapezoidCanvas = /** @class */ (function () {
             var tempContext = tempCanvas.getContext("2d");
             // Get the width an image would need to cover
             var tempCanvasDisplayWidth = (_this.canvas.width / 2) + _this.extraWidth;
-            // Set where on the canvas it needs to be drawn from (ie left or from the start of the right side)
-            var tempCanvasDisplayX = (side == Sides.Left) ? 0 : _this.canvas.width - tempCanvasDisplayWidth;
             // Make sure the image will at least cover the side it is on
             var displayWidth = (background.width > tempCanvasDisplayWidth) ? background.width : tempCanvasDisplayWidth;
             var displayHeight = (background.height > _this.canvas.height) ? background.height : _this.canvas.height;
+            // Set where on the canvas it needs to be drawn from (ie left or from the start of the right side)
+            var displayXOffset = -((displayWidth - tempCanvasDisplayWidth) / 2);
+            var tempCanvasDisplayX = (side == Sides.Left) ? displayXOffset : _this.canvas.width - tempCanvasDisplayWidth + displayXOffset;
+            // For the Y we just need to vertically centre the image
+            var tempCanvasDisplayY = -((displayHeight - _this.canvas.height) / 2);
             // Draw the image into the canvas
-            tempContext.drawImage(background, 0, 0, background.width, background.height, tempCanvasDisplayX, 0, displayWidth, displayHeight);
+            tempContext.drawImage(background, 0, 0, background.width, background.height, tempCanvasDisplayX, tempCanvasDisplayY, displayWidth, displayHeight);
             return tempCanvas;
         };
         /**
@@ -78,7 +81,6 @@ var TrapezoidCanvas = /** @class */ (function () {
             });
             context.closePath();
             context.stroke();
-            //context.fillStyle=(side == Sides.Left)? "red" : "blue";
             context.fill();
         };
         this.backgroundLeft.src = "assets/img/landscape1.jpeg";

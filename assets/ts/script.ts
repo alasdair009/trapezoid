@@ -59,15 +59,22 @@ class TrapezoidCanvas {
         tempCanvas.width = this.canvas.width;
         tempCanvas.height = this.canvas.height;
         const tempContext = tempCanvas.getContext("2d");
+
         // Get the width an image would need to cover
         const tempCanvasDisplayWidth = (this.canvas.width / 2) + this.extraWidth;
-        // Set where on the canvas it needs to be drawn from (ie left or from the start of the right side)
-        const tempCanvasDisplayX = (side == Sides.Left)? 0 : this.canvas.width - tempCanvasDisplayWidth;
+
         // Make sure the image will at least cover the side it is on
         const displayWidth = (background.width > tempCanvasDisplayWidth)? background.width : tempCanvasDisplayWidth;
         const displayHeight = (background.height > this.canvas.height)? background.height : this.canvas.height;
-        // Draw the image into the canvas
-        tempContext.drawImage(background, 0, 0, background.width, background.height, tempCanvasDisplayX, 0, displayWidth, displayHeight);
+
+        // Set where on the canvas it needs to be drawn from (ie left or from the start of the right side)
+        const displayXOffset = -((displayWidth - tempCanvasDisplayWidth) / 2)
+        const tempCanvasDisplayX = (side == Sides.Left)? displayXOffset : this.canvas.width - tempCanvasDisplayWidth + displayXOffset;
+        // For the Y we just need to vertically centre the image
+        const tempCanvasDisplayY = -((displayHeight - this.canvas.height) / 2);
+
+            // Draw the image into the canvas
+        tempContext.drawImage(background, 0, 0, background.width, background.height, tempCanvasDisplayX, tempCanvasDisplayY, displayWidth, displayHeight);
         return tempCanvas;
     }
 
@@ -103,7 +110,6 @@ class TrapezoidCanvas {
         });
         context.closePath();
         context.stroke();
-        //context.fillStyle=(side == Sides.Left)? "red" : "blue";
         context.fill();
     }
 }
