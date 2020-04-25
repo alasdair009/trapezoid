@@ -37,13 +37,26 @@ class TrapezoidCanvas {
         this.drawTrapezoid(Sides.Right);
     }
 
+    /**
+     * Setup a background canvas to generate a background pattern for the shape
+     * @param background the HTML background image
+     * @param side the side one which the background will be drawn
+     */
     generateBackgroundCanvasPattern = (background: HTMLImageElement, side: Sides):HTMLCanvasElement => {
+        // Create a temporary virtual canvas
         const tempCanvas = document.createElement("canvas");
-        const tempContext = tempCanvas.getContext("2d");
-        const tempCanvasDisplayX = (side == Sides.Left)? 0 : (this.canvas.width / 2) - this.extraWidth;
         tempCanvas.width = this.canvas.width;
         tempCanvas.height = this.canvas.height;
-        tempContext.drawImage(background, 0, 0, background.width, background.height, tempCanvasDisplayX, 0, this.canvas.width, this.canvas.height);
+        const tempContext = tempCanvas.getContext("2d");
+        // Get the width an image would need to cover
+        const tempCanvasDisplayWidth = (this.canvas.width / 2) + this.extraWidth;
+        // Set where on the canvas it needs to be drawn from (ie left or from the start of the right side)
+        const tempCanvasDisplayX = (side == Sides.Left)? 0 : this.canvas.width - tempCanvasDisplayWidth;
+        // Make sure the image will at least cover the side it is on
+        const displayWidth = (background.width > tempCanvasDisplayWidth)? background.width : tempCanvasDisplayWidth;
+        const displayHeight = (background.height > this.canvas.height)? background.height : this.canvas.height;
+        // Draw the image into the canvas
+        tempContext.drawImage(background, 0, 0, background.width, background.height, tempCanvasDisplayX, 0, displayWidth, this.canvas.height);
         return tempCanvas;
     }
 

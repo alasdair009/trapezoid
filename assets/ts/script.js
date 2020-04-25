@@ -26,13 +26,26 @@ var TrapezoidCanvas = /** @class */ (function () {
             _this.drawTrapezoid(Sides.Left);
             _this.drawTrapezoid(Sides.Right);
         };
+        /**
+         * Setup a background canvas to generate a background pattern for the shape
+         * @param background the HTML background image
+         * @param side the side one which the background will be drawn
+         */
         this.generateBackgroundCanvasPattern = function (background, side) {
+            // Create a temporary virtual canvas
             var tempCanvas = document.createElement("canvas");
-            var tempContext = tempCanvas.getContext("2d");
-            var tempCanvasDisplayX = (side == Sides.Left) ? 0 : (_this.canvas.width / 2) - _this.extraWidth;
             tempCanvas.width = _this.canvas.width;
             tempCanvas.height = _this.canvas.height;
-            tempContext.drawImage(background, 0, 0, background.width, background.height, tempCanvasDisplayX, 0, _this.canvas.width, _this.canvas.height);
+            var tempContext = tempCanvas.getContext("2d");
+            // Get the width an image would need to cover
+            var tempCanvasDisplayWidth = (_this.canvas.width / 2) + _this.extraWidth;
+            // Set where on the canvas it needs to be drawn from (ie left or from the start of the right side)
+            var tempCanvasDisplayX = (side == Sides.Left) ? 0 : _this.canvas.width - tempCanvasDisplayWidth;
+            // Make sure the image will at least cover the side it is on
+            var displayWidth = (background.width > tempCanvasDisplayWidth) ? background.width : tempCanvasDisplayWidth;
+            var displayHeight = (background.height > _this.canvas.height) ? background.height : _this.canvas.height;
+            // Draw the image into the canvas
+            tempContext.drawImage(background, 0, 0, background.width, background.height, tempCanvasDisplayX, 0, displayWidth, _this.canvas.height);
             return tempCanvas;
         };
         this.drawTrapezoid = function (side) {
