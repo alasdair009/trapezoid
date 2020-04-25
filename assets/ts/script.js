@@ -45,7 +45,7 @@ var TrapezoidCanvas = /** @class */ (function () {
             var displayWidth = (background.width > tempCanvasDisplayWidth) ? background.width : tempCanvasDisplayWidth;
             var displayHeight = (background.height > _this.canvas.height) ? background.height : _this.canvas.height;
             // Draw the image into the canvas
-            tempContext.drawImage(background, 0, 0, background.width, background.height, tempCanvasDisplayX, 0, displayWidth, _this.canvas.height);
+            tempContext.drawImage(background, 0, 0, background.width, background.height, tempCanvasDisplayX, 0, displayWidth, displayHeight);
             return tempCanvas;
         };
         this.drawTrapezoid = function (side) {
