@@ -7,6 +7,8 @@ var TrapezoidCanvas = /** @class */ (function () {
     function TrapezoidCanvas() {
         var _this = this;
         this.canvas = document.getElementById("trapezoid-canvas");
+        this.offsetX = this.canvas.getBoundingClientRect().left;
+        this.offsetY = this.canvas.getBoundingClientRect().top;
         this.angle = 20;
         this.tanAngle = Math.tan(this.angle * Math.PI / 180);
         this.backgroundLeft = new Image();
@@ -28,6 +30,20 @@ var TrapezoidCanvas = /** @class */ (function () {
             _this.drawTrapezoid(Sides.Left);
             _this.drawTrapezoid(Sides.Right);
         };
+        this.runCanvas = function () {
+            _this.canvas.addEventListener("mousemove", function (event) {
+                if (typeof _this.leftContext !== "undefined" && typeof _this.rightContext !== "undefined") {
+                    var mouseX = event.clientX - _this.offsetX;
+                    var mouseY = event.clientY - _this.offsetY;
+                    if (_this.leftContext.isPointInPath(mouseX, mouseY)) {
+                        console.log("left");
+                    }
+                    if (_this.rightContext.isPointInPath(mouseX, mouseY)) {
+                        console.log("right");
+                    }
+                }
+            });
+        };
         /**
          * Setup a background canvas to generate a background pattern for the shape
          * @param background the HTML background image
@@ -48,26 +64,20 @@ var TrapezoidCanvas = /** @class */ (function () {
             var widthDifference = displayWidth - tempCanvasDisplayWidth;
             var heightDifference = displayHeight - _this.canvas.height;
             if (widthDifference > 0 && heightDifference > 0) {
-                console.log("Asset width is " + displayWidth + " which is " + widthDifference + " wider");
-                console.log("Asset height is " + displayHeight + " is " + heightDifference + " taller");
                 var ratioToResize = 1;
                 // Figure out in which dimension the asset is larger
                 // If the width is larger scale by the height
                 // If the height is larger scale by the width
+                // So calculate the percentage amount we need to remove from the dimension and convert that to a ratio
                 if (widthDifference > heightDifference) {
-                    console.log("resize by height");
                     ratioToResize = 1 - (heightDifference / displayHeight);
                 }
                 else {
-                    console.log("resize by width");
                     ratioToResize = 1 - (widthDifference / displayWidth);
                 }
-                console.log("Ratio: " + ratioToResize);
                 // Resize the asset
                 displayWidth *= ratioToResize;
                 displayHeight *= ratioToResize;
-                console.log("New width is " + displayWidth);
-                console.log("New height is " + displayHeight);
             }
             // Set where on the canvas it needs to be drawn from (ie left or from the start of the right side)
             var displayXOffset = -((displayWidth - tempCanvasDisplayWidth) / 2);
@@ -107,6 +117,12 @@ var TrapezoidCanvas = /** @class */ (function () {
             context.closePath();
             context.stroke();
             context.fill();
+            if (side == Sides.Left) {
+                _this.leftContext = context;
+            }
+            else {
+                _this.rightContext = context;
+            }
         };
         this.backgroundLeft.src = "assets/img/landscape1.jpeg";
         this.backgroundRight.src = "assets/img/landscape2.jpeg";
@@ -117,6 +133,7 @@ var TrapezoidCanvas = /** @class */ (function () {
         this.backgroundRight.onload = function () {
             _this.drawTrapezoid(Sides.Right);
         };
+        this.runCanvas();
         window.addEventListener("resize", this.redrawCanvas);
     }
     return TrapezoidCanvas;

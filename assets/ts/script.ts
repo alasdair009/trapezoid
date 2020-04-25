@@ -5,6 +5,10 @@ enum Sides {
 
 class TrapezoidCanvas {
     canvas = document.getElementById("trapezoid-canvas") as HTMLCanvasElement;
+    offsetX = this.canvas.getBoundingClientRect().left;
+    offsetY = this.canvas.getBoundingClientRect().top;
+    leftContext: CanvasRenderingContext2D;
+    rightContext: CanvasRenderingContext2D;
     angle = 20;
     tanAngle = Math.tan(this.angle * Math.PI/180);
     extraWidth: number;
@@ -25,6 +29,7 @@ class TrapezoidCanvas {
             this.drawTrapezoid(Sides.Right);
         }
 
+        this.runCanvas();
         window.addEventListener("resize", this.redrawCanvas);
     }
 
@@ -46,6 +51,24 @@ class TrapezoidCanvas {
     drawCanvas = () => {
         this.drawTrapezoid(Sides.Left);
         this.drawTrapezoid(Sides.Right);
+    }
+
+    runCanvas = () => {
+        this.canvas.addEventListener("mousemove", (event) => {
+
+            if (typeof this.leftContext !== "undefined" && typeof this.rightContext !== "undefined") {
+                const mouseX = event.clientX - this.offsetX;
+                const mouseY = event.clientY - this.offsetY;
+
+                if (this.leftContext.isPointInPath(mouseX, mouseY)) {
+                    console.log("left");
+                }
+
+                if (this.rightContext.isPointInPath(mouseX, mouseY)) {
+                    console.log("right");
+                }
+            }
+        });
     }
 
     /**
@@ -132,6 +155,12 @@ class TrapezoidCanvas {
         context.closePath();
         context.stroke();
         context.fill();
+
+        if (side == Sides.Left) {
+            this.leftContext = context;
+        } else {
+            this.rightContext = context;
+        }
     }
 }
 
