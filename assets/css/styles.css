@@ -1,0 +1,16 @@
+.trapezoid {
+  background: grey;
+  display: flex;
+  margin: auto;
+  max-width: 1200px;
+  height: 75vh;
+  overflow: hidden;
+  position: relative;
+  width: 100%; }
+
+.trapezoid-canvas {
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%; }
