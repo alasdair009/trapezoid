@@ -1,0 +1,26 @@
+{
+  "name": "trapezoid",
+  "version": "1.0.0",
+  "description": "Render two adjacent trapezoids on a canvas",
+  "main": "index.html",
+  "scripts": {
+    "build": "npm run build:ts & npm run build:scss",
+    "build:ts": "tsc assets/ts/script.ts",
+    "build:scss": "node-sass --include-path scss assets/scss/styles.scss   assets/css/styles.css",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alasdair009/trapezoid.git"
+  },
+  "author": "Alasdair Macrae",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/alasdair009/trapezoid/issues"
+  },
+  "homepage": "https://github.com/alasdair009/trapezoid#readme",
+  "devDependencies": {
+    "node-sass": "^4.13.1",
+    "typescript": "^3.8.3"
+  }
+}
