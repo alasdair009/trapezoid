@@ -1,8 +1,13 @@
+enum Sides {
+    Left,
+    Right
+}
+
 class TrapezoidCanvas {
     canvas = document.getElementById("trapezoid-canvas") as HTMLCanvasElement;
     angle = 20;
     tanAngle = Math.tan(this.angle * Math.PI/180);
-    extraWidth = 0;
+    extraWidth: number;
 
     constructor() {
         // If the screen proportions change we need to redraw the content
@@ -10,7 +15,6 @@ class TrapezoidCanvas {
 
         this.setupCanvas();
         this.drawCanvas();
-        console.log(this);
     }
 
     /**
@@ -28,41 +32,38 @@ class TrapezoidCanvas {
         this.drawCanvas();
     }
 
-    runCanvas = () => {
-
-    }
-
     drawCanvas = () => {
-        this.drawLeftTrapezoid();
-        this.drawRightTrapezoid();
+        this.drawTrapezoid(Sides.Left);
+        this.drawTrapezoid(Sides.Right);
+        //this.drawLeftTrapezoid();
+        //this.drawRightTrapezoid();
     }
 
-    drawLeftTrapezoid = () => {
-        const leftContext = this.canvas.getContext("2d");
-        leftContext.beginPath();
-        leftContext.lineCap = 'round';
-        leftContext.moveTo(0,0);
-        leftContext.lineTo((this.canvas.width / 2) + this.extraWidth,0);
-        leftContext.lineTo((this.canvas.width / 2) - this.extraWidth, this.canvas.height);
-        leftContext.lineTo(0, this.canvas.height);
-        leftContext.closePath();
-        leftContext.stroke();
-        leftContext.fillStyle="blue";
-        leftContext.fill();
-    }
+    drawTrapezoid = (side: Sides) => {
+        const context = this.canvas.getContext("2d");
+        const topMiddle = (this.canvas.width / 2) + this.extraWidth;
+        const bottomMiddle = (this.canvas.width / 2) - this.extraWidth;
+        const xCoordinates = (side == Sides.Left)? [0, topMiddle, bottomMiddle, 0] : [topMiddle, this.canvas.width, this.canvas.width, bottomMiddle];
+        const yCoordinates = [0, 0, this.canvas.height, this.canvas.height];
+        const background = new Image();
+        background.src = (side == Sides.Left)? "assets/img/landscape1.jpeg" : "assets/img/landscape2.jpeg";
 
-    drawRightTrapezoid = () => {
-        const rightContext = this.canvas.getContext("2d");
-        rightContext.beginPath();
-        rightContext.lineCap = 'round';
-        rightContext.moveTo(this.canvas.width,0);
-        rightContext.lineTo((this.canvas.width / 2) + this.extraWidth,0);
-        rightContext.lineTo((this.canvas.width / 2) - this.extraWidth, this.canvas.height);
-        rightContext.lineTo(this.canvas.width, this.canvas.height);
-        rightContext.closePath();
-        rightContext.stroke();
-        rightContext.fillStyle="red";
-        rightContext.fill();
+        //background.onload = () => {
+            context.fillStyle = context.createPattern(background, "repeat");
+            context.beginPath();
+            xCoordinates.forEach((xCoordinate, index) => {
+                if (index > 0) {
+                    context.lineTo(xCoordinate, yCoordinates[index]);
+                } else {
+                    context.moveTo(xCoordinate, yCoordinates[index]);
+                }
+
+            });
+            context.closePath();
+            context.stroke();
+            context.fillStyle=(side == Sides.Left)? "red" : "blue";
+            context.fill();
+        //}
     }
 }
 
