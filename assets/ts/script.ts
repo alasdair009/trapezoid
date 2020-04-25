@@ -35,8 +35,6 @@ class TrapezoidCanvas {
     drawCanvas = () => {
         this.drawTrapezoid(Sides.Left);
         this.drawTrapezoid(Sides.Right);
-        //this.drawLeftTrapezoid();
-        //this.drawRightTrapezoid();
     }
 
     drawTrapezoid = (side: Sides) => {
@@ -48,7 +46,7 @@ class TrapezoidCanvas {
         const background = new Image();
         background.src = (side == Sides.Left)? "assets/img/landscape1.jpeg" : "assets/img/landscape2.jpeg";
 
-        //background.onload = () => {
+        background.onload = () => {
             context.fillStyle = context.createPattern(background, "repeat");
             context.beginPath();
             xCoordinates.forEach((xCoordinate, index) => {
@@ -61,9 +59,9 @@ class TrapezoidCanvas {
             });
             context.closePath();
             context.stroke();
-            context.fillStyle=(side == Sides.Left)? "red" : "blue";
+            //context.fillStyle=(side == Sides.Left)? "red" : "blue";
             context.fill();
-        //}
+        }
     }
 }
 

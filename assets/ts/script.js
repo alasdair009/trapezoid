@@ -25,8 +25,6 @@ var TrapezoidCanvas = /** @class */ (function () {
         this.drawCanvas = function () {
             _this.drawTrapezoid(Sides.Left);
             _this.drawTrapezoid(Sides.Right);
-            //this.drawLeftTrapezoid();
-            //this.drawRightTrapezoid();
         };
         this.drawTrapezoid = function (side) {
             var context = _this.canvas.getContext("2d");
@@ -36,22 +34,22 @@ var TrapezoidCanvas = /** @class */ (function () {
             var yCoordinates = [0, 0, _this.canvas.height, _this.canvas.height];
             var background = new Image();
             background.src = (side == Sides.Left) ? "assets/img/landscape1.jpeg" : "assets/img/landscape2.jpeg";
-            //background.onload = () => {
-            context.fillStyle = context.createPattern(background, "repeat");
-            context.beginPath();
-            xCoordinates.forEach(function (xCoordinate, index) {
-                if (index > 0) {
-                    context.lineTo(xCoordinate, yCoordinates[index]);
-                }
-                else {
-                    context.moveTo(xCoordinate, yCoordinates[index]);
-                }
-            });
-            context.closePath();
-            context.stroke();
-            context.fillStyle = (side == Sides.Left) ? "red" : "blue";
-            context.fill();
-            //}
+            background.onload = function () {
+                context.fillStyle = context.createPattern(background, "repeat");
+                context.beginPath();
+                xCoordinates.forEach(function (xCoordinate, index) {
+                    if (index > 0) {
+                        context.lineTo(xCoordinate, yCoordinates[index]);
+                    }
+                    else {
+                        context.moveTo(xCoordinate, yCoordinates[index]);
+                    }
+                });
+                context.closePath();
+                context.stroke();
+                //context.fillStyle=(side == Sides.Left)? "red" : "blue";
+                context.fill();
+            };
         };
         // If the screen proportions change we need to redraw the content
         window.addEventListener("resize", this.redrawCanvas);
