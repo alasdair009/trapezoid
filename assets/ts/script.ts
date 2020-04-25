@@ -37,6 +37,16 @@ class TrapezoidCanvas {
         this.drawTrapezoid(Sides.Right);
     }
 
+    generateBackgroundCanvasPattern = (background: HTMLImageElement, side: Sides):HTMLCanvasElement => {
+        const tempCanvas = document.createElement("canvas");
+        const tempContext = tempCanvas.getContext("2d");
+        const tempCanvasDisplayX = (side == Sides.Left)? 0 : (this.canvas.width / 2) - this.extraWidth;
+        tempCanvas.width = this.canvas.width;
+        tempCanvas.height = this.canvas.height;
+        tempContext.drawImage(background, 0, 0, background.width, background.height, tempCanvasDisplayX, 0, this.canvas.width, this.canvas.height);
+        return tempCanvas;
+    }
+
     drawTrapezoid = (side: Sides) => {
         const context = this.canvas.getContext("2d");
         const topMiddle = (this.canvas.width / 2) + this.extraWidth;
@@ -47,7 +57,10 @@ class TrapezoidCanvas {
         background.src = (side == Sides.Left)? "assets/img/landscape1.jpeg" : "assets/img/landscape2.jpeg";
 
         background.onload = () => {
-            context.fillStyle = context.createPattern(background, "repeat");
+            // Once we have the background create a temporary canvas to scale it to the right size
+            const tempCanvas = this.generateBackgroundCanvasPattern(background, side);
+
+            context.fillStyle = context.createPattern(tempCanvas, "no-repeat");
             context.beginPath();
             xCoordinates.forEach((xCoordinate, index) => {
                 if (index > 0) {

@@ -26,6 +26,15 @@ var TrapezoidCanvas = /** @class */ (function () {
             _this.drawTrapezoid(Sides.Left);
             _this.drawTrapezoid(Sides.Right);
         };
+        this.generateBackgroundCanvasPattern = function (background, side) {
+            var tempCanvas = document.createElement("canvas");
+            var tempContext = tempCanvas.getContext("2d");
+            var tempCanvasDisplayX = (side == Sides.Left) ? 0 : (_this.canvas.width / 2) - _this.extraWidth;
+            tempCanvas.width = _this.canvas.width;
+            tempCanvas.height = _this.canvas.height;
+            tempContext.drawImage(background, 0, 0, background.width, background.height, tempCanvasDisplayX, 0, _this.canvas.width, _this.canvas.height);
+            return tempCanvas;
+        };
         this.drawTrapezoid = function (side) {
             var context = _this.canvas.getContext("2d");
             var topMiddle = (_this.canvas.width / 2) + _this.extraWidth;
@@ -35,7 +44,9 @@ var TrapezoidCanvas = /** @class */ (function () {
             var background = new Image();
             background.src = (side == Sides.Left) ? "assets/img/landscape1.jpeg" : "assets/img/landscape2.jpeg";
             background.onload = function () {
-                context.fillStyle = context.createPattern(background, "repeat");
+                // Once we have the background create a temporary canvas to scale it to the right size
+                var tempCanvas = _this.generateBackgroundCanvasPattern(background, side);
+                context.fillStyle = context.createPattern(tempCanvas, "no-repeat");
                 context.beginPath();
                 xCoordinates.forEach(function (xCoordinate, index) {
                     if (index > 0) {
