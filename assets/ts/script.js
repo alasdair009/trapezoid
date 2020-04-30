@@ -3,138 +3,93 @@ var Sides;
     Sides[Sides["Left"] = 0] = "Left";
     Sides[Sides["Right"] = 1] = "Right";
 })(Sides || (Sides = {}));
+/**
+ * A basic class for initialising two trapezoids tessellating with each other
+ */
 var TrapezoidCanvas = /** @class */ (function () {
     function TrapezoidCanvas() {
         var _this = this;
+        // Mouse position
+        this.mPos = {
+            x: 0,
+            y: 0
+        };
         this.canvas = document.getElementById("trapezoid-canvas");
         this.offsetX = this.canvas.getBoundingClientRect().left;
         this.offsetY = this.canvas.getBoundingClientRect().top;
-        this.angle = 20;
-        this.tanAngle = Math.tan(this.angle * Math.PI / 180);
         this.backgroundLeft = new Image();
         this.backgroundRight = new Image();
         /**
-         * Ensures we have the right amount of canvas pixels and clear any previous
+         * We want animation at 60fps, so we set up one draw method that handles:
+         *  - clearing
+         *  - redrawing
+         *  - resizing
+         * Then calls request animation frame
          */
-        this.setupCanvas = function () {
+        this.draw = function () {
+            _this.context = _this.canvas.getContext("2d");
             _this.canvas.width = _this.canvas.clientWidth;
             _this.canvas.height = _this.canvas.clientHeight;
-            _this.extraWidth = (_this.tanAngle * _this.canvas.height) / 2;
-        };
-        this.redrawCanvas = function () {
-            _this.canvas.getContext("2d").clearRect(0, 0, _this.canvas.width, _this.canvas.height);
-            _this.setupCanvas();
-            _this.drawCanvas();
-        };
-        this.drawCanvas = function () {
-            _this.drawTrapezoid(Sides.Left);
-            _this.drawTrapezoid(Sides.Right);
-        };
-        this.runCanvas = function () {
-            _this.canvas.addEventListener("mousemove", function (event) {
-                if (typeof _this.leftContext !== "undefined" && typeof _this.rightContext !== "undefined") {
-                    var mouseX = event.clientX - _this.offsetX;
-                    var mouseY = event.clientY - _this.offsetY;
-                    if (_this.leftContext.isPointInPath(mouseX, mouseY)) {
-                        console.log("left");
-                    }
-                    if (_this.rightContext.isPointInPath(mouseX, mouseY)) {
-                        console.log("right");
-                    }
-                }
-            });
+            _this.context.clearRect(0, 0, _this.canvas.width, _this.canvas.height);
+            _this.drawTrapezoids();
+            _this.context.fillStyle = 'rgba(21,21,21,0.5)';
+            // hover left
+            if (_this.context.isPointInPath(_this.pathLeft, _this.mPos.x, _this.mPos.y)) {
+                _this.context.fill(_this.pathLeft);
+            }
+            // hover right
+            if (_this.context.isPointInPath(_this.pathRight, _this.mPos.x, _this.mPos.y)) {
+                _this.context.fill(_this.pathRight);
+            }
+            window.requestAnimationFrame(_this.draw);
         };
         /**
-         * Setup a background canvas to generate a background pattern for the shape
-         * @param background the HTML background image
-         * @param side the side one which the background will be drawn
+         * Draw the trapezoids
+         *
+         * This currently splits the frame at two fifths and three fiths
+         *  - the ratios will remian the same on resize, but the angle will change
+         *
+         * This behaviour could be reversed, you'd just change the maths behind the
+         * path.lineTo() calls
          */
-        this.generateBackgroundCanvasPattern = function (background, side) {
-            // Create a temporary virtual canvas
-            var tempCanvas = document.createElement("canvas");
-            tempCanvas.width = _this.canvas.width;
-            tempCanvas.height = _this.canvas.height;
-            var tempContext = tempCanvas.getContext("2d");
-            // Get the width an image would need to cover
-            var tempCanvasDisplayWidth = (_this.canvas.width / 2) + _this.extraWidth;
-            // Make sure the image will at least cover the side it is on
-            var displayWidth = (background.width > tempCanvasDisplayWidth) ? background.width : tempCanvasDisplayWidth;
-            var displayHeight = (background.height > _this.canvas.height) ? background.height : _this.canvas.height;
-            // If both dimensions of the asset are bigger we need to proportionally shrink it down
-            var widthDifference = displayWidth - tempCanvasDisplayWidth;
-            var heightDifference = displayHeight - _this.canvas.height;
-            if (widthDifference > 0 && heightDifference > 0) {
-                var ratioToResize = 1;
-                // Figure out in which dimension the asset is larger
-                // If the width is larger scale by the height
-                // If the height is larger scale by the width
-                // So calculate the percentage amount we need to remove from the dimension and convert that to a ratio
-                if (widthDifference > heightDifference) {
-                    ratioToResize = 1 - (heightDifference / displayHeight);
-                }
-                else {
-                    ratioToResize = 1 - (widthDifference / displayWidth);
-                }
-                // Resize the asset
-                displayWidth *= ratioToResize;
-                displayHeight *= ratioToResize;
-            }
-            // Set where on the canvas it needs to be drawn from (ie left or from the start of the right side)
-            var displayXOffset = -((displayWidth - tempCanvasDisplayWidth) / 2);
-            var tempCanvasDisplayX = (side == Sides.Left) ? displayXOffset : _this.canvas.width - tempCanvasDisplayWidth + displayXOffset;
-            // For the Y we just need to vertically centre the image
-            var tempCanvasDisplayY = -((displayHeight - _this.canvas.height) / 2);
-            // Draw the image into the canvas
-            tempContext.drawImage(background, 0, 0, background.width, background.height, tempCanvasDisplayX, tempCanvasDisplayY, displayWidth, displayHeight);
-            return tempCanvas;
-        };
-        /**
-         * Draw the trapezoid for the given side
-         * @param side
-         */
-        this.drawTrapezoid = function (side) {
-            // Setup the canvas context ready for draw
-            var context = _this.canvas.getContext("2d");
-            // Define the coordinates for the trapezoid
-            var topMiddle = (_this.canvas.width / 2) + _this.extraWidth;
-            var bottomMiddle = (_this.canvas.width / 2) - _this.extraWidth;
-            var xCoordinates = (side == Sides.Left) ? [0, topMiddle, bottomMiddle, 0] : [topMiddle, _this.canvas.width, _this.canvas.width, bottomMiddle];
-            var yCoordinates = [0, 0, _this.canvas.height, _this.canvas.height];
-            // Get the background image
-            var background = (side == Sides.Left) ? _this.backgroundLeft : _this.backgroundRight;
-            // Create a temporary canvas to scale it to the right size
-            var tempCanvas = _this.generateBackgroundCanvasPattern(background, side);
-            context.fillStyle = context.createPattern(tempCanvas, "no-repeat");
-            context.beginPath();
-            xCoordinates.forEach(function (xCoordinate, index) {
-                if (index > 0) {
-                    context.lineTo(xCoordinate, yCoordinates[index]);
-                }
-                else {
-                    context.moveTo(xCoordinate, yCoordinates[index]);
-                }
-            });
-            context.closePath();
-            context.stroke();
-            context.fill();
-            if (side == Sides.Left) {
-                _this.leftContext = context;
-            }
-            else {
-                _this.rightContext = context;
-            }
+        this.drawTrapezoids = function () {
+            var threeFifths = (_this.canvas.width / 5) * 3;
+            var twoFifths = (_this.canvas.width / 5) * 2;
+            // Define the path of the left shape
+            _this.pathLeft = new Path2D(); // New path each frame in case of resize
+            _this.pathLeft.lineTo(threeFifths, 0);
+            _this.pathLeft.lineTo(twoFifths, _this.canvas.height);
+            _this.pathLeft.lineTo(0, _this.canvas.height);
+            _this.pathLeft.lineTo(0, 0);
+            _this.pathLeft.closePath();
+            // Save the normal context clip (none), clip to the path, draw the image, then restore the normal context clip
+            _this.context.save();
+            _this.context.clip(_this.pathLeft);
+            _this.context.drawImage(_this.backgroundLeft, 0, 0); // Here we could calculate sx, sy values from the mouse position see: https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
+            _this.context.restore();
+            // Define the path of the right shape
+            _this.pathRight = new Path2D(); // New path each frame in case of resize
+            _this.pathRight.moveTo(threeFifths, 0);
+            _this.pathRight.lineTo(_this.canvas.width, 0);
+            _this.pathRight.lineTo(_this.canvas.width, _this.canvas.height);
+            _this.pathRight.lineTo(twoFifths, _this.canvas.height);
+            _this.pathRight.lineTo(threeFifths, 0);
+            _this.pathRight.closePath();
+            // Save the normal context clip (none), clip to the path, draw the image, then restore the normal context clip
+            _this.context.save();
+            _this.context.clip(_this.pathRight);
+            _this.context.drawImage(_this.backgroundRight, 0, 0); // Here we could calculate sx, sy values from the mouse position see: https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
+            _this.context.restore();
         };
         this.backgroundLeft.src = "assets/img/landscape1.jpeg";
         this.backgroundRight.src = "assets/img/landscape2.jpeg";
-        this.setupCanvas();
-        this.backgroundLeft.onload = function () {
-            _this.drawTrapezoid(Sides.Left);
-        };
-        this.backgroundRight.onload = function () {
-            _this.drawTrapezoid(Sides.Right);
-        };
-        this.runCanvas();
-        window.addEventListener("resize", this.redrawCanvas);
+        // Set up mouse listener on canvas
+        this.canvas.addEventListener('mousemove', function (e) {
+            _this.mPos.x = e.clientX;
+            _this.mPos.y = e.clientY;
+        });
+        // Call the draw for the first time
+        this.draw();
     }
     return TrapezoidCanvas;
 }());

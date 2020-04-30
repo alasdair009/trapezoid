@@ -4,6 +4,8 @@
   "description": "Render two adjacent trapezoids on a canvas",
   "main": "index.html",
   "scripts": {
+    "dev": "npx concurrently --kill-others \"npm run dev:tsc\" \"browser-sync start -s --port 4000 -w -f 'assets'\"",
+    "dev:tsc": "tsc assets/ts/*.ts -w",
     "build": "npm run build:ts & npm run build:scss",
     "build:ts": "tsc assets/ts/script.ts",
     "build:scss": "node-sass --include-path scss assets/scss/styles.scss   assets/css/styles.css",
@@ -20,6 +22,7 @@
   },
   "homepage": "https://github.com/alasdair009/trapezoid#readme",
   "devDependencies": {
+    "browser-sync": "^2.26.7",
     "node-sass": "^4.13.1",
     "typescript": "^3.8.3"
   }

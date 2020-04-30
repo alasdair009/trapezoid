@@ -7,14 +7,19 @@ enum Sides {
  * A basic class for initialising two trapezoids tessellating with each other
  */
 class TrapezoidCanvas {
+    // Mouse position
+    mPos = {
+        x: 0,
+        y: 0
+    }
+
     canvas = document.getElementById("trapezoid-canvas") as HTMLCanvasElement;
+    context: CanvasRenderingContext2D;
     offsetX = this.canvas.getBoundingClientRect().left;
     offsetY = this.canvas.getBoundingClientRect().top;
-    leftContext: CanvasRenderingContext2D;
-    rightContext: CanvasRenderingContext2D;
-    angle = 20;
-    tanAngle = Math.tan(this.angle * Math.PI/180);
-    extraWidth: number;
+    
+    pathLeft;
+    pathRight;
     backgroundLeft = new Image();
     backgroundRight = new Image();
 
@@ -22,158 +27,89 @@ class TrapezoidCanvas {
         this.backgroundLeft.src = "assets/img/landscape1.jpeg";
         this.backgroundRight.src = "assets/img/landscape2.jpeg";
 
-        this.setupCanvas();
+        // Set up mouse listener on canvas
+        this.canvas.addEventListener('mousemove', (e: MouseEvent) => {
+            this.mPos.x = e.clientX;
+            this.mPos.y = e.clientY;
+        });
 
-        this.backgroundLeft.onload = () => {
-            this.drawTrapezoid(Sides.Left);
-        }
-
-        this.backgroundRight.onload = () => {
-            this.drawTrapezoid(Sides.Right);
-        }
-
-        this.runCanvas();
-        window.addEventListener("resize", this.redrawCanvas);
+        // Call the draw for the first time
+        this.draw();
     }
 
+
     /**
-     * Ensures we have the right amount of canvas pixels and clear any previous
+     * We want animation at 60fps, so we set up one draw method that handles:
+     *  - clearing
+     *  - redrawing
+     *  - resizing
+     * Then calls request animation frame
      */
-    setupCanvas = () => {
+    draw = () =>  {
+        this.context = this.canvas.getContext("2d");
+
         this.canvas.width = this.canvas.clientWidth;
         this.canvas.height = this.canvas.clientHeight;
-        this.extraWidth = (this.tanAngle * this.canvas.height) / 2;
-    }
 
-    /**
-     * Redraw the canvas to ensure the new dimensions work correctly
-     */
-    redrawCanvas = () => {
-        this.canvas.getContext("2d").clearRect(0,0,this.canvas.width, this.canvas.height);
-        this.setupCanvas();
-        this.drawCanvas();
-        this.runCanvas();
-    }
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.drawTrapezoids();
 
-    /**
-     * First draw of the canvas
-     */
-    drawCanvas = () => {
-        this.drawTrapezoid(Sides.Left);
-        this.drawTrapezoid(Sides.Right);
-    }
+        this.context.fillStyle = 'rgba(21,21,21,0.5)';
 
-    /**
-     * Handle all events after the draw
-     */
-    runCanvas = () => {
-        this.canvas.addEventListener("mousemove", (event) => {
-
-            if (typeof this.leftContext !== "undefined" && typeof this.rightContext !== "undefined") {
-                const mouseX = event.clientX - this.offsetX;
-                const mouseY = event.clientY - this.offsetY;
-
-                if (this.leftContext.isPointInPath(mouseX, mouseY)) {
-                    console.log("left");
-                }
-
-                if (this.rightContext.isPointInPath(mouseX, mouseY)) {
-                    console.log("right");
-                }
-            }
-        });
-    }
-
-    /**
-     * Setup a background canvas to generate a background pattern for the shape
-     * @param background the HTML background image
-     * @param side the side one which the background will be drawn
-     */
-    generateBackgroundCanvasPattern = (background: HTMLImageElement, side: Sides):HTMLCanvasElement => {
-        // Create a temporary virtual canvas
-        const tempCanvas = document.createElement("canvas");
-        tempCanvas.width = this.canvas.width;
-        tempCanvas.height = this.canvas.height;
-        const tempContext = tempCanvas.getContext("2d");
-
-        // Get the width an image would need to cover
-        const tempCanvasDisplayWidth = (this.canvas.width / 2) + this.extraWidth;
-
-        // Make sure the image will at least cover the side it is on
-        let displayWidth = (background.width > tempCanvasDisplayWidth)? background.width : tempCanvasDisplayWidth;
-        let displayHeight = (background.height > this.canvas.height)? background.height : this.canvas.height;
-
-        // If both dimensions of the asset are bigger we need to proportionally shrink it down
-        const widthDifference = displayWidth - tempCanvasDisplayWidth;
-        const heightDifference = displayHeight - this.canvas.height;
-
-        if (widthDifference > 0 && heightDifference > 0) {
-            let ratioToResize = 1;
-            // Figure out in which dimension the asset is larger
-            // If the width is larger scale by the height
-            // If the height is larger scale by the width
-            // So calculate the percentage amount we need to remove from the dimension and convert that to a ratio
-            if (widthDifference > heightDifference) {
-                ratioToResize = 1 - (heightDifference / displayHeight);
-            } else {
-                ratioToResize = 1 - (widthDifference / displayWidth);
-            }
-
-            // Resize the asset
-            displayWidth*= ratioToResize;
-            displayHeight*= ratioToResize;
+        // hover left
+        if (this.context.isPointInPath(this.pathLeft, this.mPos.x, this.mPos.y)) {
+            this.context.fill(this.pathLeft);
         }
 
-        // Set where on the canvas it needs to be drawn from (ie left or from the start of the right side)
-        const displayXOffset = -((displayWidth - tempCanvasDisplayWidth) / 2)
-        const tempCanvasDisplayX = (side == Sides.Left)? displayXOffset : this.canvas.width - tempCanvasDisplayWidth + displayXOffset;
-        // For the Y we just need to vertically centre the image
-        const tempCanvasDisplayY = -((displayHeight - this.canvas.height) / 2);
+        // hover right
+        if (this.context.isPointInPath(this.pathRight, this.mPos.x, this.mPos.y)) {
+            this.context.fill(this.pathRight);
+        }
 
-            // Draw the image into the canvas
-        tempContext.drawImage(background, 0, 0, background.width, background.height, tempCanvasDisplayX, tempCanvasDisplayY, displayWidth, displayHeight);
-        return tempCanvas;
+        window.requestAnimationFrame(this.draw);
     }
 
     /**
-     * Draw the trapezoid for the given side
-     * @param side
+     * Draw the trapezoids
+     * 
+     * This currently splits the frame at two fifths and three fiths
+     *  - the ratios will remian the same on resize, but the angle will change
+     * 
+     * This behaviour could be reversed, you'd just change the maths behind the 
+     * path.lineTo() calls
      */
-    drawTrapezoid = (side: Sides) => {
-        // Setup the canvas context ready for draw
-        const context = this.canvas.getContext("2d");
+    drawTrapezoids = () => {
+        const threeFifths = (this.canvas.width / 5) * 3;
+        const twoFifths = (this.canvas.width / 5) * 2;
 
-        // Define the coordinates for the trapezoid
-        const topMiddle = (this.canvas.width / 2) + this.extraWidth;
-        const bottomMiddle = (this.canvas.width / 2) - this.extraWidth;
-        const xCoordinates = (side == Sides.Left)? [0, topMiddle, bottomMiddle, 0] : [topMiddle, this.canvas.width, this.canvas.width, bottomMiddle];
-        const yCoordinates = [0, 0, this.canvas.height, this.canvas.height];
+        // Define the path of the left shape
+        this.pathLeft = new Path2D(); // New path each frame in case of resize
+        this.pathLeft.lineTo(threeFifths, 0);
+        this.pathLeft.lineTo(twoFifths, this.canvas.height);
+        this.pathLeft.lineTo(0, this.canvas.height);
+        this.pathLeft.lineTo(0, 0);
+        this.pathLeft.closePath();
 
-        // Get the background image
-        const background = (side == Sides.Left)? this.backgroundLeft : this.backgroundRight;
+        // Save the normal context clip (none), clip to the path, draw the image, then restore the normal context clip
+        this.context.save();
+        this.context.clip(this.pathLeft);
+        this.context.drawImage(this.backgroundLeft, 0, 0); // Here we could calculate sx, sy values from the mouse position see: https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
+        this.context.restore();
 
-        // Create a temporary canvas to scale it to the right size
-        const tempCanvas = this.generateBackgroundCanvasPattern(background, side);
+        // Define the path of the right shape
+        this.pathRight = new Path2D(); // New path each frame in case of resize
+        this.pathRight.moveTo(threeFifths, 0);
+        this.pathRight.lineTo(this.canvas.width, 0);
+        this.pathRight.lineTo(this.canvas.width, this.canvas.height);
+        this.pathRight.lineTo(twoFifths, this.canvas.height);
+        this.pathRight.lineTo(threeFifths, 0);
+        this.pathRight.closePath();
 
-        context.fillStyle = context.createPattern(tempCanvas, "no-repeat");
-        context.beginPath();
-        xCoordinates.forEach((xCoordinate, index) => {
-            if (index > 0) {
-                context.lineTo(xCoordinate, yCoordinates[index]);
-            } else {
-                context.moveTo(xCoordinate, yCoordinates[index]);
-            }
-
-        });
-        context.closePath();
-        context.stroke();
-        context.fill();
-
-        if (side == Sides.Left) {
-            this.leftContext = context;
-        } else {
-            this.rightContext = context;
-        }
+        // Save the normal context clip (none), clip to the path, draw the image, then restore the normal context clip
+        this.context.save();
+        this.context.clip(this.pathRight);
+        this.context.drawImage(this.backgroundRight, 0, 0); // Here we could calculate sx, sy values from the mouse position see: https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
+        this.context.restore();
     }
 }
 
